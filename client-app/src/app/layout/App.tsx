@@ -4,6 +4,7 @@ import { IActivity } from "../models/activity";
 import NavBar from "../../features/nav/NavBar";
 import { ActivityDashboard } from "../../features/activities/dashboard/ActivityDashboard";
 import agent from "../api/agent";
+import { LoadingComponent } from "./LoadingComponent";
 
 const App = () => {
   const [activities, setActivities] = useState<IActivity[]>([]);
@@ -11,6 +12,7 @@ const App = () => {
     null
   );
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handleSelectActivity = (id: string) => {
     setSelectedActivity(activities.filter(a => a.id === id)[0]);
@@ -32,17 +34,21 @@ const App = () => {
   };
 
   const handleEditActivity = (activity: IActivity) => {
-    setActivities([...activities.filter(a => a.id !== activity.id), activity]);
+    agent.Activities.update(activity).then(() => {
+      setActivities([...activities.filter(a => a.id !== activity.id), activity]);
     //update specific activity
     //first part of array is: spread activities and filter out activity we are updating
     //so array is gonna contain activities with ids that do not match specified id of activity we are passing in
     //then we tack on newly updated activity
     setSelectedActivity(activity); //after we have created the activity we are displaying its details in the activty details component
     setEditMode(false);
-  };
+    }) 
+  }
 
   const handleDeleteActivity = (id: string) => {
-    setActivities([...activities.filter(a => a.id !== id)]); //want to return other activities that do not match
+    agent.Activities.delete(id).then(() => {
+      setActivities([...activities.filter(a => a.id !== id)]); //want to return other activities that do not match
+    })
   };
 
   useEffect(() => {
@@ -54,8 +60,10 @@ const App = () => {
         activities.push(activity);
       });
       setActivities(activities);
-    });
+    }).then(() => setLoading(false));
   }, []);
+
+  if (loading) return <LoadingComponent content='Loading activities...'/> 
 
   return (
     <Fragment>

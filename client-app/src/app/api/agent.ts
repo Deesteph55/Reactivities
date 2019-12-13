@@ -1,15 +1,19 @@
 import axios, { AxiosResponse } from 'axios';
 import { IActivity } from '../models/activity';
+import { resolve } from 'dns';
 
 axios.defaults.baseURL = 'http://localhost:5000/api';
 
 const responseBody = (response: AxiosResponse) => response.data;
 
+const sleep = (ms: number) => (response: AxiosResponse) =>
+    new Promise<AxiosResponse>(resolve => setTimeout(() => resolve(response), ms));
+
 const requests = {
-    get: (url: string) => axios.get(url).then(responseBody),
-    post: (url: string, body: {}) => axios.post(url, body).then(responseBody),//create
-    put: (url: string, body: {}) => axios.put(url, body).then(responseBody),//edit
-    del: (url: string) => axios.delete(url).then(responseBody),//delete
+    get: (url: string) => axios.get(url).then(sleep(1000)).then(responseBody),
+    post: (url: string, body: {}) => axios.post(url, body).then(sleep(1000)).then(responseBody),//create
+    put: (url: string, body: {}) => axios.put(url, body).then(sleep(1000)).then(responseBody),//edit
+    del: (url: string) => axios.delete(url).then(sleep(1000)).then(responseBody),//delete
 }
 
 //activities feature. all of our activitues rquests will go inside an activities object
